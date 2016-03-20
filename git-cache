@@ -59,12 +59,12 @@ clone() {
 
     if _check_commit $2 2>&1; then
         git init "${TARGET_PATH}"
-        git_cache tag tmp$SHA1 $SHA1 || true # ignore possibly already existing tag
-        git -C "${TARGET_PATH}" fetch --depth=1 "${GIT_CACHE_DIR}" refs/tags/tmp$SHA1
+        git_cache tag commit$SHA1 $SHA1 || true # ignore possibly already existing tag
+        git -C "${TARGET_PATH}" fetch --depth=1 "${GIT_CACHE_DIR}" refs/tags/commit$SHA1
         git -C "${TARGET_PATH}" checkout FETCH_HEAD
-        git_cache tag -d tmp$SHA1
     else
         git clone "${REMOTE}" "${TARGET_PATH}"
+        git -C "${TARGET_PATH}" checkout $SHA1
     fi
 }
 

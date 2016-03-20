@@ -1,13 +1,13 @@
 #!/bin/sh
 
 git_cache() {
-    git -C "${GIT_CACHE}" $*
+    git -C "${GIT_CACHE_DIR}" $*
 }
 
 init() {
     set -ex
-    test -d "${GIT_CACHE}/.git" || {
-        mkdir -p "${GIT_CACHE}"
+    test -d "${GIT_CACHE_DIR}/.git" || {
+        mkdir -p "${GIT_CACHE_DIR}"
 
         git_cache init --bare
         git_cache config core.compression 1
@@ -23,13 +23,13 @@ add() {
 
 update() {
     set -ex
-    REMOTE=${1:---all}
+    local REMOTE=${1:---all}
     git_cache fetch $REMOTE
     set +ex
 }
 
 list() {
-    REMOTES="$(git_cache remote show)"
+    local REMOTES="$(git_cache remote show)"
     for remote in $REMOTES; do
         echo "${remote}: $(git_cache remote get-url $remote)"
     done
@@ -37,13 +37,35 @@ list() {
 
 drop() {
     set -ex
-    REMOTE=${1}
+    local REMOTE=${1}
     [ -z "$REMOTE" ] && {
         echo "usage: git cache drop <name>"
         exit 1
     }
     git_cache remote remove $REMOTE
     set +ex
+}
+
+_check_commit() {
+    git_cache cat-file -e ${1}^{commit}
+}
+
+clone() {
+    set -ex
+    local REMOTE="${1}"
+    local SHA1="${2}"
+    local REMOTE_NAME="$(basename $REMOTE)"
+    local TARGET_PATH="${3:-${REMOTE_NAME}}"
+
+    if _check_commit $2 2>&1; then
+        git init "${TARGET_PATH}"
+        git_cache tag tmp$SHA1 $SHA1 || true # ignore possibly already existing tag
+        git -C "${TARGET_PATH}" fetch --depth=1 "${GIT_CACHE_DIR}" refs/tags/tmp$SHA1
+        git -C "${TARGET_PATH}" checkout FETCH_HEAD
+        git_cache tag -d tmp$SHA1
+    else
+        git clone "${REMOTE}" "${TARGET_PATH}"
+    fi
 }
 
 usage() {
@@ -57,6 +79,7 @@ usage() {
     echo "    git cache list                list cached repositories"
     echo "    git cache drop <name>         drop repo from cache"
     echo "    git cache update [<name>]     fetch repo named <name> (or all)"
+    echo "    git cache clone <url> <SHA1>  clone repository <url> from cache"
     echo "    git cache show-path           print's the path that can be used as "
     echo "                                  '--reference' parameter"
     echo ""
@@ -67,8 +90,7 @@ usage() {
 ACTION=$1
 shift
 
-#GIT_CACHE=${1:-${GIT_CACHE}}
-GIT_CACHE=${GIT_CACHE:-${HOME}/.gitcache}
+export GIT_CACHE_DIR=${GIT_CACHE_DIR:-${HOME}/.gitcache}
 
 case $ACTION in
     init)
@@ -87,7 +109,10 @@ case $ACTION in
         drop $*
         ;;
     show-path)
-        echo ${GIT_CACHE}
+        echo ${GIT_CACHE_DIR}
+        ;;
+    clone)
+        clone $*
         ;;
     *)
         usage

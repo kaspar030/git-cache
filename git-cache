@@ -66,6 +66,7 @@ clone() {
         git clone "${REMOTE}" "${TARGET_PATH}"
         git -C "${TARGET_PATH}" checkout $SHA1
     fi
+    set +ex
 }
 
 usage() {

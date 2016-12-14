@@ -18,7 +18,19 @@ init() {
 
 add() {
     set -ex
-    git_cache remote add $1 $2
+    if [ $# -eq 1 ]; then
+        local repo="$1"
+        local name="$(basename $repo .git)"
+    else
+        local repo="$1"
+        local name="$2"
+    fi
+
+    if ! is_cached "$repo"; then
+        git_cache remote add "$name" "$repo"
+    else
+        echo "git-cache: $url already in cache"
+    fi
     set +ex
 }
 
@@ -27,6 +39,15 @@ update() {
     local REMOTE=${1:---all}
     git_cache fetch $REMOTE
     set +ex
+}
+
+is_cached() {
+    local url="$1"
+    local REMOTES="$(git_cache remote show)"
+    for remote in $REMOTES; do
+        test "$(git_cache remote get-url $remote)" == "$url" && return 0
+    done
+    return 1
 }
 
 list() {
@@ -77,7 +98,8 @@ usage() {
     echo "usage:"
     echo ""
     echo "    git cache init                initialize git cache"
-    echo "    git cache add <name> <url>    add repository <url> with name <name>"
+    echo "    git cache add <url> [<name>]  add repository <url> with name <name>"
+    echo "                                  (if no name given, use \"basename $url .git\""
     echo "    git cache list                list cached repositories"
     echo "    git cache drop <name>         drop repo from cache"
     echo "    git cache update [<name>]     fetch repo named <name> (or all)"

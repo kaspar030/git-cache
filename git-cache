@@ -20,7 +20,7 @@ add() {
     set -ex
     if [ $# -eq 1 ]; then
         local repo="$1"
-        local name="$(basename $repo .git)"
+        local name="$(_remote_name $repo)"
     else
         local repo="$1"
         local name="$2"
@@ -42,11 +42,13 @@ update() {
 }
 
 is_cached() {
+    set +ex
     local url="$1"
     local REMOTES="$(git_cache remote show)"
     for remote in $REMOTES; do
         test "$(git_cache remote get-url $remote)" == "$url" && return 0
     done
+    set -ex
     return 1
 }
 
@@ -72,12 +74,23 @@ _check_commit() {
     git_cache cat-file -e ${1}^{commit}
 }
 
+_remote_name() {
+    basename "$*" .git
+}
+
 clone() {
     set -ex
     local REMOTE="${1}"
     local SHA1="${2}"
-    local REMOTE_NAME="$(basename $REMOTE)"
+    local REMOTE_NAME="$(_remote_name $REMOTE)"
     local TARGET_PATH="${3:-${REMOTE_NAME}}"
+
+    if [ "$GIT_CACHE_AUTOADD" == "1" ]; then
+        if ! is_cached "$REMOTE"; then
+            add "$REMOTE"
+            update "$(_remote_name $REMOTE)"
+        fi
+    fi
 
     if _check_commit $2 2>&1; then
         git init "${TARGET_PATH}"

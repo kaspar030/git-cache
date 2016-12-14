@@ -6,7 +6,8 @@ git_cache() {
 
 init() {
     set -ex
-    test -d "${GIT_CACHE_DIR}/.git" || {
+    local _git_dir="$(git_cache rev-parse --git-dir 2>/dev/null)"
+    test "$_git_dir" == "." -o "$_git_dir" == ".git" || {
         mkdir -p "${GIT_CACHE_DIR}"
 
         git_cache init --bare

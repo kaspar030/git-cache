@@ -87,18 +87,17 @@ clone() {
 
     if [ "$GIT_CACHE_AUTOADD" == "1" ]; then
         if ! is_cached "$REMOTE"; then
+            echo "git cache: auto-adding $REMOTE"
             add "$REMOTE"
             update "$(_remote_name $REMOTE)"
         fi
     fi
 
     if _check_commit $2 2>&1; then
-        git init "${TARGET_PATH}"
         git_cache tag commit$SHA1 $SHA1 || true # ignore possibly already existing tag
-        git -C "${TARGET_PATH}" fetch --tags --depth=1 "${GIT_CACHE_DIR}" refs/tags/commit$SHA1
-        git -C "${TARGET_PATH}" checkout FETCH_HEAD
+        git clone --reference "${GIT_CACHE_DIR}" "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch commit$SHA1
     else
-        git clone "${REMOTE}" "${TARGET_PATH}"
+        git clone --reference "${GIT_CACHE_DIR}" "${REMOTE}" "${TARGET_PATH}"
         git -C "${TARGET_PATH}" checkout $SHA1
     fi
     set +e

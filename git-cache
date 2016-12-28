@@ -41,7 +41,7 @@ is_cached() {
     local url="$1"
     local REMOTES="$(git_cache remote show)"
     for remote in $REMOTES; do
-        [ "$(git_cache remote get-url $remote)" = "$url" ] && return 0
+        [ "$(git_cache ls-remote --get-url $remote)" = "$url" ] && return 0
     done
     set -e
     return 1
@@ -50,7 +50,7 @@ is_cached() {
 list() {
     local REMOTES="$(git_cache remote show)"
     for remote in $REMOTES; do
-        echo "$(git_cache remote get-url $remote)"
+        echo "$(git_cache ls-remote --get-url $remote)"
     done
 }
 
@@ -63,7 +63,7 @@ drop() {
     }
     local REMOTES="$(git_cache remote show)"
     for remote in $REMOTES; do
-        [ "$(git_cache remote get-url $remote)" = "$REMOTE" ] && {
+        [ "$(git_cache ls-remote --get-url $remote)" = "$REMOTE" ] && {
             git_cache remote remove $remote
             break
         }

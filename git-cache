@@ -95,11 +95,11 @@ clone() {
     fi
 
     if _check_commit $2 2>&1; then
-        git_cache tag commit$SHA1 $SHA1 || true # ignore possibly already existing tag
-        git clone --reference "${GIT_CACHE_DIR}" --depth=1 --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch commit$SHA1
+        git_cache tag commit$SHA1 $SHA1 2>&1 > /dev/null || true # ignore possibly already existing tag
+        git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch commit$SHA1
     else
         git clone --reference "${GIT_CACHE_DIR}" --shared "${REMOTE}" "${TARGET_PATH}"
-        git -C "${TARGET_PATH}" checkout $SHA1
+        git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $SHA1
     fi
     set +e
 }

@@ -90,6 +90,9 @@ clone() {
     local REMOTE_NAME="$(_remote_name $REMOTE)"
     local TARGET_PATH="${3:-${REMOTE_NAME}}"
 
+    # make sure git won't ask for credentials
+    export GIT_TERMINAL_PROMPT=0
+
     if git_cache_initialized; then
         if [ "$GIT_CACHE_AUTOADD" = "1" ]; then
             if ! is_cached "$REMOTE"; then

@@ -123,7 +123,7 @@ _check_tag_or_commit() {
     if _check_commit $SHA1 ; then
         git_cache tag commit$SHA1 $SHA1 2> /dev/null || true # ignore possibly already existing tag
         echo "commit$SHA1"
-    elif _tag_to_sha1 ${REMOTE_NAME}/$SHA1; then
+    elif _tag_to_sha1 ${REMOTE_NAME}/$SHA1 > /dev/null; then
         echo "${REMOTE_NAME}/$SHA1"
     fi
 }

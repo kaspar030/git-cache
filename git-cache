@@ -90,20 +90,25 @@ clone() {
     local REMOTE_NAME="$(_remote_name $REMOTE)"
     local TARGET_PATH="${3:-${REMOTE_NAME}}"
 
-    if [ "$GIT_CACHE_AUTOADD" = "1" ]; then
-        if ! is_cached "$REMOTE"; then
-            echo "git cache: auto-adding $REMOTE"
-            add "$REMOTE"
-            update "$(_remote_name $REMOTE)"
+    if git_cache_initialized; then
+        if [ "$GIT_CACHE_AUTOADD" = "1" ]; then
+            if ! is_cached "$REMOTE"; then
+                echo "git cache: auto-adding $REMOTE"
+                add "$REMOTE"
+                update "$(_remote_name $REMOTE)" || true
+            fi
         fi
-    fi
 
-    if _check_commit $2 2>&1; then
-        git_cache tag commit$SHA1 $SHA1 2>&1 > /dev/null || true # ignore possibly already existing tag
-        git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch commit$SHA1
+        if _check_commit $SHA1 2>&1; then
+            git_cache tag commit$SHA1 $SHA1 2>&1 > /dev/null || true # ignore possibly already existing tag
+            git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch commit$SHA1
+        else
+            git clone --reference "${GIT_CACHE_DIR}" --shared "${REMOTE}" "${TARGET_PATH}"
+            git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $SHA1
+        fi
     else
-        git clone --reference "${GIT_CACHE_DIR}" --shared "${REMOTE}" "${TARGET_PATH}"
-        git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $SHA1
+            git clone "${REMOTE}" "${TARGET_PATH}"
+            git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $SHA1
     fi
     set +e
 }

@@ -21,6 +21,12 @@ init() {
 }
 
 add() {
+    local repo="$1"
+
+    _locked "$GIT_CACHE_DIR/$name.addlock" _add "$repo"
+}
+
+_add() {
     set -e
     local repo="$1"
     local name="$(_remote_name $repo)"
@@ -32,6 +38,16 @@ add() {
         echo "git-cache: $url already in cache"
     fi
     set +e
+}
+
+_locked() {
+    local lockfile="$1"
+    shift
+
+    (
+        flock -w 600 9 || exit 1
+        $*
+    ) 9>"$lockfile"
 }
 
 update() {
@@ -46,7 +62,7 @@ update() {
 
     for remote in $REMOTES; do
         echo "git-cache: updating remote $remote"
-        git_cache --namespace $remote fetch -n $remote
+        _locked "$GIT_CACHE_DIR/$remote.lock" git_cache --namespace $remote fetch -n $remote
     done
 
     set +e

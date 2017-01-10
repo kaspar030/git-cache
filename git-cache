@@ -4,10 +4,14 @@ git_cache() {
     git -C "${GIT_CACHE_DIR}" $*
 }
 
+git_cache_initialized() {
+    local _git_dir="$(git_cache rev-parse --git-dir 2>/dev/null)"
+    test "$_git_dir" = "." -o "$_git_dir" = ".git"
+}
+
 init() {
     set -e
-    local _git_dir="$(git_cache rev-parse --git-dir 2>/dev/null)"
-    [ "$_git_dir" = "." -o "$_git_dir" = ".git" ] || {
+    git_cache_initialized || {
         mkdir -p "${GIT_CACHE_DIR}"
 
         git_cache init --bare

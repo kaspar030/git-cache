@@ -154,8 +154,9 @@ clone() {
         fi
 
         if [ -n "$tag" ]; then
-            echo "git-cache: cloning from cache"
+            echo "git-cache: cloning from cache."
             git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch $tag
+            git -C "${TARGET_PATH}" fetch origin "refs/tags/${REMOTE_NAME}/*:refs/tags/*" > /dev/null
         else
             echo "git-cache: trying checkout from source"
             git clone --reference "${GIT_CACHE_DIR}" --shared "${REMOTE}" "${TARGET_PATH}"

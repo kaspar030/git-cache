@@ -156,6 +156,7 @@ clone() {
         if ! is_cached "$REMOTE"; then
             echo "git cache: auto-adding $REMOTE"
             add "$REMOTE"
+            update "$REMOTE" || true
         fi
 
         local pull=0

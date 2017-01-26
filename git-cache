@@ -156,7 +156,6 @@ clone() {
         if ! is_cached "$REMOTE"; then
             echo "git cache: auto-adding $REMOTE"
             add "$REMOTE"
-            update "$REMOTE" || true
         fi
 
         local pull=0
@@ -168,14 +167,23 @@ clone() {
             local tag="$(_check_tag_or_commit $SHA1 $REMOTE_NAME)"
             if [ -z "$tag" ]; then
                 # commit / tag not in cache, try updating repo
-                update "$REMOTE" || true
+                update "$REMOTE"
                 tag="$(_check_tag_or_commit $SHA1 $REMOTE_NAME)"
+            fi
+        else
+            local tag="remotes/$REMOTE_NAME/master"
+            if [ -z "$(_tag_to_sha1 $tag)" ]; then
+                update "$REMOTE"
+            fi
+            tag="$(_check_tag_or_commit $(_tag_to_sha1 $tag) $REMOTE_NAME)"
+            if [ -z "$tag" ]; then
+                echo "git-cache: cannot checkout master branch of $REMOTE"
+                false
             fi
         fi
 
         if [ $pull -eq 1 ]; then
             echo "git-cache: checking out pull request"
-            local tag="$(_check_tag_or_commit $(_tag_to_sha1 remotes/$REMOTE_NAME/master) $REMOTE_NAME)"
             git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch $tag
             git -C "${TARGET_PATH}" fetch $REMOTE $SHA1:$SHA1
             git -C "${TARGET_PATH}" checkout $SHA1

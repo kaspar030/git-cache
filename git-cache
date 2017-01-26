@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+[ "$GIT_CACHE_VERBOSE" != "1" ] && Q=-q
+
 git_cache() {
     git -C "${GIT_CACHE_DIR}" $*
 }
@@ -81,7 +83,7 @@ update() {
 
     for remote in $REMOTES; do
         echo "git-cache: updating remote $remote"
-        _locked "$GIT_CACHE_DIR/$remote.lock" git_cache --namespace $remote fetch -n $remote
+        _locked "$GIT_CACHE_DIR/$remote.lock" git_cache --namespace $remote fetch $Q -n $remote
     done
 }
 
@@ -182,19 +184,18 @@ clone() {
             fi
         fi
 
-        if [ $pull -eq 1 ]; then
-            echo "git-cache: checking out pull request"
-            git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch $tag
-            git -C "${TARGET_PATH}" fetch $REMOTE $SHA1:$SHA1
-            git -C "${TARGET_PATH}" checkout $SHA1
-        elif [ -n "$tag" ]; then
+        if [ -n "$tag" ]; then
             echo "git-cache: cloning from cache. tag=$tag"
-            git -c advice.detachedHead=false clone --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch $tag
-            git -C "${TARGET_PATH}" fetch origin "refs/tags/${REMOTE_NAME}/*:refs/tags/*" > /dev/null
+            git -c advice.detachedHead=false clone $Q --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch $tag
+            git -C "${TARGET_PATH}" fetch $Q origin "refs/tags/${REMOTE_NAME}/*:refs/tags/*"
+            if [ $pull -eq 1 ]; then
+                git -C "${TARGET_PATH}" fetch $Q $REMOTE $SHA1:$SHA1
+                git -C "${TARGET_PATH}" checkout $Q $SHA1
+            fi
         else
             echo "git-cache: trying checkout from source"
-            git clone --reference "${GIT_CACHE_DIR}" --shared "${REMOTE}" "${TARGET_PATH}"
-            git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $SHA1
+            git clone $Q --reference "${GIT_CACHE_DIR}" --shared "${REMOTE}" "${TARGET_PATH}"
+            git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $Q $SHA1
         fi
     else
             git clone "${REMOTE}" "${TARGET_PATH}"

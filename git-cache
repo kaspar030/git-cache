@@ -187,7 +187,15 @@ clone() {
         if [ -n "$tag" ]; then
             echo "git-cache: cloning from cache. tag=$tag"
             git -c advice.detachedHead=false clone $Q --reference "${GIT_CACHE_DIR}" --shared "${GIT_CACHE_DIR}" "${TARGET_PATH}" --branch $tag
+
+            # rename tags from <remote-hash>/* to *
             git -C "${TARGET_PATH}" fetch $Q origin "refs/tags/${REMOTE_NAME}/*:refs/tags/*"
+
+            # remove all commit* and <remote-hash>/* tags
+            git -C "${TARGET_PATH}" tag -l \
+                | grep -P '(^[a-f0-9]{40}/|^commit[a-f0-9]{40}$)' \
+                | xargs git -C "${TARGET_PATH}" tag -d > /dev/null
+
             if [ $pull -eq 1 ]; then
                 git -C "${TARGET_PATH}" fetch $Q $REMOTE $SHA1:$SHA1
                 git -C "${TARGET_PATH}" checkout $Q $SHA1

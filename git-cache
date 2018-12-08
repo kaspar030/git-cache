@@ -196,6 +196,14 @@ clone() {
                 | grep -P '(^[a-f0-9]{40}/|^commit[a-f0-9]{40}$)' \
                 | xargs git -C "${TARGET_PATH}" tag -d > /dev/null
 
+            # cleanup possibly created helper tag
+            case $tag in
+                commit*)
+                    git_cache tag -d $tag > /dev/null
+                    ;;
+            esac
+
+
             if [ $pull -eq 1 ]; then
                 git -C "${TARGET_PATH}" fetch $Q $REMOTE $SHA1:$SHA1
                 git -C "${TARGET_PATH}" checkout $Q $SHA1
@@ -209,6 +217,12 @@ clone() {
             git clone "${REMOTE}" "${TARGET_PATH}"
             git -c advice.detachedHead=false -C "${TARGET_PATH}" checkout $SHA1
     fi
+}
+
+cleanup() {
+    git_cache tag -l \
+        | grep -P '(^commit[a-f0-9]{40}$)' \
+        | xargs git -C "${GIT_CACHE_DIR}" tag -d > /dev/null
 }
 
 usage() {
@@ -225,6 +239,7 @@ usage() {
     echo "    git cache clone <url> <SHA1>  clone repository <url> from cache"
     echo "    git cache show-path           print's the path that can be used as "
     echo "                                  '--reference' parameter"
+    echo "    git cache cleanup             do some maintenance work"
     echo ""
     echo "To retrieve objects from cache (will use remote repository if needed):"
     echo '    git clone --reference $(git cache show-path) <repo>'
@@ -261,6 +276,9 @@ case $ACTION in
         ;;
     clone)
         clone $*
+        ;;
+    cleanup)
+        cleanup
         ;;
     *)
         usage

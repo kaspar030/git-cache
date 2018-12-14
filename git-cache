@@ -136,8 +136,9 @@ _check_tag_or_commit() {
     local REMOTE_NAME=$2
 
     if _check_commit $SHA1 ; then
-        git_cache tag commit$SHA1 $SHA1 2> /dev/null || true # ignore possibly already existing tag
-        echo "commit$SHA1"
+        local tag=commit$SHA1-$$
+        git_cache tag $tag $SHA1 2> /dev/null || true # ignore possibly already existing tag
+        echo "$tag"
     elif _tag_to_sha1 ${REMOTE_NAME}/$SHA1 > /dev/null; then
         echo "${REMOTE_NAME}/$SHA1"
     fi
@@ -199,7 +200,7 @@ clone() {
             # cleanup possibly created helper tag
             case $tag in
                 commit*)
-                    git_cache tag -d $tag > /dev/null
+                    git_cache tag -d $tag 2>&1 > /dev/null || true
                     ;;
             esac
 

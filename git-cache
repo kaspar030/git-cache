@@ -194,7 +194,7 @@ clone() {
 
             # remove all commit* and <remote-hash>/* tags
             git -C "${TARGET_PATH}" tag -l \
-                | grep -P '(^[a-f0-9]{40}/|^commit[a-f0-9]{40}$)' \
+                | grep -P '(^[a-f0-9]{40}/|^commit[a-f0-9]{40}(-\d+)?$)' \
                 | xargs git -C "${TARGET_PATH}" tag -d > /dev/null
 
             # cleanup possibly created helper tag
@@ -222,7 +222,7 @@ clone() {
 
 cleanup() {
     git_cache tag -l \
-        | grep -P '(^commit[a-f0-9]{40}$)' \
+        | grep -P '(^commit[a-f0-9]{40}(-\d+)?$)' \
         | xargs git -C "${GIT_CACHE_DIR}" tag -d > /dev/null
 }
 

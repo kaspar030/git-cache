@@ -240,7 +240,9 @@ usage() {
     echo "    git cache clone <url> <SHA1>  clone repository <url> from cache"
     echo "    git cache show-path           print's the path that can be used as "
     echo "                                  '--reference' parameter"
-    echo "    git cache cleanup             do some maintenance work"
+    echo "    git cache cleanup             cleanup dangling temporary tags"
+    echo "                                  (appear if git-cache gets inter-"
+    echo "                                   rupted, but are harmless)"
     echo ""
     echo "To retrieve objects from cache (will use remote repository if needed):"
     echo '    git clone --reference $(git cache show-path) <repo>'

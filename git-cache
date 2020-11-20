@@ -190,7 +190,7 @@ clone() {
 
         if [ -n "$tag" ]; then
             echo "git-cache: cloning from cache. branch/tag/commit=$tag"
-            git init $Q -b git-cache-tmp "${TARGET_PATH}"
+            git init $Q "${TARGET_PATH}"
             echo "${GIT_CACHE_DIR}/objects" > "${TARGET_PATH}/.git/objects/info/alternates"
             git -C "${TARGET_PATH}" remote add cache "${GIT_CACHE_DIR}"
             git -C "${TARGET_PATH}" config remote.cache.fetch "refs/heads/cache/$REMOTE_NAME/*:refs/remotes/cache/*"

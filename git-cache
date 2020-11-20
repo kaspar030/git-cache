@@ -161,7 +161,7 @@ clone() {
     [ -z "$TARGET_PATH" ] && TARGET_PATH="$(basename $REMOTE)"
 
     [ -d "$TARGET_PATH" ] && {
-        [ -n "$(ls -a ${TARGET_PATH})" ] && {
+        [ -n "$(ls -A ${TARGET_PATH})" ] && {
             echo "git-cache: target folder \"$TARGET_PATH\" exists and is non-empty."
             exit 1
         }
